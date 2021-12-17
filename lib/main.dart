@@ -40,91 +40,99 @@ class _HomePageWidgetState extends State<HomePageWidget> {
       key: scaffoldKey,
       body: SingleChildScrollView(
         child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(5.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Image.network(
+          child: Center(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.black,
+                        width: 2,
+                      ),
+                    ),
+                    child: Image.network(
                       'https://picsum.photos/seed/44/600',
                       scale: 3,
                     ),
-                  ],
+                  ),
                 ),
-              ),
-              const Text("12386 Likes"),
-              const Text(
-                'Is Higher or Lower than:',
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25.0),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: FloatingActionButton(
-                  elevation: 1.5,
-                  backgroundColor: Colors.white10,
-                  shape: const StadiumBorder(
-                    side: BorderSide(
-                      color: Colors.black,
-                      width: 1,
-                    ),
-                  ),
-                  child: Image.asset(
-                    "appIcons/arrow.png",
-                    color: Colors.black,
-                  ),
-                  splashColor: Colors.black54,
-                  onPressed: () {
-                    print("PRESSED UP");
-                    _incrementSCore();
-                  },
+                const Text("12386 Likes"),
+                const Text(
+                  'Is Higher or Lower than:',
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25.0),
                 ),
-              ),
-              Text('Score: $_score'),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: FloatingActionButton(
-                  elevation: 1.5,
-                  backgroundColor: Colors.white10,
-                  shape: const StadiumBorder(
-                    side: BorderSide(
-                      color: Colors.black,
-                      width: 1,
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: FloatingActionButton(
+                    elevation: 1.5,
+                    backgroundColor: Colors.white10,
+                    shape: const StadiumBorder(
+                      side: BorderSide(
+                        color: Colors.black,
+                        width: 1,
+                      ),
                     ),
-                  ),
-                  child: RotatedBox(
-                    quarterTurns: 2,
                     child: Image.asset(
                       "appIcons/arrow.png",
                       color: Colors.black,
                     ),
+                    splashColor: Colors.black54,
+                    onPressed: () {
+                      print("PRESSED UP");
+                      _incrementSCore();
+                    },
                   ),
-                  splashColor: Colors.black54,
-                  onPressed: () {
-                    print("PRESSED DOWN");
-                    _incrementSCore();
-                  },
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Image.network(
+                Text('Score: $_score'),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: FloatingActionButton(
+                    elevation: 1.5,
+                    backgroundColor: Colors.white10,
+                    shape: const StadiumBorder(
+                      side: BorderSide(
+                        color: Colors.black,
+                        width: 1,
+                      ),
+                    ),
+                    child: RotatedBox(
+                      quarterTurns: 2,
+                      child: Image.asset(
+                        "appIcons/arrow.png",
+                        color: Colors.black,
+                      ),
+                    ),
+                    splashColor: Colors.black54,
+                    onPressed: () {
+                      print("PRESSED DOWN");
+                      _incrementSCore();
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.black,
+                        width: 2,
+                      ),
+                    ),
+                    child: Image.network(
                       'https://picsum.photos/seed/44/600',
                       scale: 3,
                     ),
-                  ],
+                  ),
                 ),
-              ),
-              const Text("1234 Likes"),
-            ],
+                const Text("1234 Likes"),
+              ],
+            ),
           ),
         ),
       ),
