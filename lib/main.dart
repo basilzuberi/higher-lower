@@ -1,6 +1,50 @@
 import 'package:flutter/material.dart';
+import 'package:youtube_api/youtube_api.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:math';
 
-void main() => runApp(const GameApp());
+String query = "PewDiePie";
+late List<YouTubeVideo> videoResult;
+String youTubeKey = dotenv.env['YOUTUBE_API_KEY'].toString();
+int max = 50;
+YoutubeAPI ytApi = YoutubeAPI(youTubeKey, maxResults: max, type: "channel");
+String topYoutubeVideo = "";
+String botYoutubeVideo = "";
+var rng = Random();
+Future main() async {
+  // To load the .env file contents into dotenv.
+  // NOTE: fileName defaults to .env and can be omitted in this case.
+  await dotenv.load(fileName: ".env");
+  //...runapp
+
+  videoResult = await ytApi.search(query);
+
+  getVideos(videoResult);
+
+  runApp(const GameApp());
+}
+
+void getVideos(videoResult) {
+  int v1 = rng.nextInt(max);
+  int v2 = rng.nextInt(max);
+  String checkQueryVideo1 = videoResult[v1].kind.toString().toLowerCase();
+  String checkQueryVideo2 = videoResult[v2].kind.toString().toLowerCase();
+
+  if (checkQueryVideo1 == "video" || checkQueryVideo2 == "video") {
+    topYoutubeVideo = videoResult[v1].thumbnail.medium.url.toString();
+    botYoutubeVideo = videoResult[v2].thumbnail.medium.url.toString();
+  }
+
+  while (checkQueryVideo1 != "video" || checkQueryVideo2 != "video") {
+    v1 = rng.nextInt(max);
+    v2 = rng.nextInt(max);
+    checkQueryVideo1 = videoResult[v1].kind.toString().toLowerCase();
+    checkQueryVideo2 = videoResult[v2].kind.toString().toLowerCase();
+
+    topYoutubeVideo = videoResult[v1].thumbnail.medium.url.toString();
+    botYoutubeVideo = videoResult[v2].thumbnail.medium.url.toString();
+  }
+}
 
 class GameApp extends StatelessWidget {
   const GameApp({Key? key}) : super(key: key);
@@ -27,11 +71,14 @@ class HomePageWidget extends StatefulWidget {
 
 class _HomePageWidgetState extends State<HomePageWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
+
   int _score = 0;
+
   void _incrementSCore() {
     setState(() {
       _score++;
     });
+    getVideos(videoResult);
   }
 
   @override
@@ -55,8 +102,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                       ),
                     ),
                     child: Image.network(
-                      'https://picsum.photos/seed/44/600',
-                      scale: 3,
+                      topYoutubeVideo,
+                      scale: 1,
                     ),
                   ),
                 ),
@@ -125,8 +172,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                       ),
                     ),
                     child: Image.network(
-                      'https://picsum.photos/seed/44/600',
-                      scale: 3,
+                      botYoutubeVideo,
+                      scale: 1,
                     ),
                   ),
                 ),
