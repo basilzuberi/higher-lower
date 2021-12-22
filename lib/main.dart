@@ -6,11 +6,11 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:math';
 import 'package:http/http.dart' as http;
 
-String query = "Fireship";
+String channelName = "PewDiePie";
 late List<YouTubeVideo> videoResult;
 String youTubeKey = dotenv.env['YOUTUBE_API_KEY'].toString();
 int max = 50;
-YoutubeAPI ytApi = YoutubeAPI(youTubeKey, maxResults: max, type: "channel");
+// YoutubeAPI ytApi = YoutubeAPI(youTubeKey, maxResults: max, type: "channel");
 String strTopYoutubeVideoLink = "";
 String strBotYoutubeVideoLink = "";
 String strTopYoutubeVideoLikes = "";
@@ -22,70 +22,113 @@ Future main() async {
   // To load the .env file contents into dotenv.
   // NOTE: fileName defaults to .env and can be omitted in this case.
   await dotenv.load(fileName: ".env");
+
+  String playlistID = await getPlayListID(youTubeKey, channelName);
+  Map vidIDs = await getAllVideosFromPlaylist(youTubeKey, playlistID);
+  var lstVideoIDandThumbnail = vidIDs.entries.toList();
+  String strVideoIDs = vidIDs.keys.join(",");
+  List lstLikeCount = await getVideoStats(youTubeKey, strVideoIDs);
+
   //...runapp
-
-  videoResult = await ytApi.search(query);
-
-  getVideos(videoResult);
-  strTopYoutubeVideoLikes = await getVideoStats(youTubeKey, strTopVideoID);
-  strBotYoutubeVideoLikes = await getVideoStats(youTubeKey, strBotVideoID);
-
   runApp(const GameApp());
 }
 
-getVideoStats(String apikey, String id) async {
-  String likeCount = "";
-  // This query gets the like counts for a video
+getPlayListID(String youTubeKey, String channelName) async {
+  String playlistID = "";
   await http
       .get(Uri.parse(
-          "https://www.googleapis.com/youtube/v3/videos?part=statistics&id=$id&key=$apikey"))
+          "https://youtube.googleapis.com/youtube/v3/channels?part=contentDetails&forUsername=$channelName&key=$youTubeKey"))
       .then((value) {
     final response = value;
     if (response.statusCode == 200) {
-      likeCount = json
-          .decode(response.body)['items'][0]['statistics']['likeCount']
+      playlistID = json
+          .decode(response.body)['items'][0]['contentDetails']
+              ['relatedPlaylists']['uploads']
           .toString();
     } else if (response.statusCode == 403) {
-      likeCount = "-1";
+      playlistID = "-1";
     }
   });
-  strTopYoutubeVideoLikes = "-1";
+
+  return playlistID;
+}
+
+getAllVideosFromPlaylist(String youTubeKey, String playlistID) async {
+  var vidIDsAndImage = {};
+  List<dynamic> parsedListJson = [];
+  await http
+      .get(Uri.parse(
+          "https://youtube.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=$max&playlistId=$playlistID&key=$youTubeKey"))
+      .then((value) {
+    final response = value;
+    if (response.statusCode == 200) {
+      parsedListJson = json.decode(response.body)['items'];
+    }
+  });
+  for (int i = 0; i < parsedListJson.length; i++) {
+    String vidID =
+        parsedListJson[i]['snippet']['resourceId']['videoId'].toString();
+    String vidThumbnailUrl =
+        parsedListJson[i]['snippet']['thumbnails']['medium']['url'].toString();
+    vidIDsAndImage[vidID] = vidThumbnailUrl;
+  }
+  return vidIDsAndImage;
+}
+
+getVideoStats(String youTubeKey, String id) async {
+  List likeCount = [];
+  // This query gets the like counts for a video
+  List<dynamic> parsedListJson = [];
+  await http
+      .get(Uri.parse(
+          "https://www.googleapis.com/youtube/v3/videos?part=statistics&id=$id&key=$youTubeKey"))
+      .then((value) {
+    final response = value;
+    if (response.statusCode == 200) {
+      parsedListJson = json.decode(response.body)['items'];
+    }
+  });
+  for (int i = 0; i < parsedListJson.length; i++) {
+    String likes = parsedListJson[i]['statistics']['likeCount'].toString();
+    likeCount.add(likes);
+  }
+  // [0]
   return likeCount;
 }
 
-void returnStats() async {
-  strTopYoutubeVideoLikes = await getVideoStats(youTubeKey, strTopVideoID);
-  strBotYoutubeVideoLikes = await getVideoStats(youTubeKey, strBotVideoID);
-}
+// void returnStats() async {
+//   strTopYoutubeVideoLikes = await getVideoStats(youTubeKey, strTopVideoID);
+//   strBotYoutubeVideoLikes = await getVideoStats(youTubeKey, strBotVideoID);
+// }
 
-void getVideos(videoResult) {
-  int v1 = rng.nextInt(max);
-  int v2 = rng.nextInt(max);
-  String checkQueryVideo1 = videoResult[v1].kind.toString().toLowerCase();
-  String checkQueryVideo2 = videoResult[v2].kind.toString().toLowerCase();
+// void getVideos(videoResult) {
+//   int v1 = rng.nextInt(max);
+//   int v2 = rng.nextInt(max);
+//   String checkQueryVideo1 = videoResult[v1].kind.toString().toLowerCase();
+//   String checkQueryVideo2 = videoResult[v2].kind.toString().toLowerCase();
 
-  if (checkQueryVideo1 == "video" || checkQueryVideo2 == "video") {
-    strTopYoutubeVideoLink = videoResult[v1].thumbnail.medium.url.toString();
-    strBotYoutubeVideoLink = videoResult[v2].thumbnail.medium.url.toString();
-    strTopVideoID = videoResult[v1].id;
-    strBotVideoID = videoResult[v2].id;
-    returnStats();
-  }
+//   if (checkQueryVideo1 == "video" || checkQueryVideo2 == "video") {
+//     strTopYoutubeVideoLink = videoResult[v1].thumbnail.medium.url.toString();
+//     strBotYoutubeVideoLink = videoResult[v2].thumbnail.medium.url.toString();
+//     strTopVideoID = videoResult[v1].id;
+//     strBotVideoID = videoResult[v2].id;
+//     returnStats();
+//   }
 
-  while (checkQueryVideo1 != "video" || checkQueryVideo2 != "video") {
-    v1 = rng.nextInt(max);
-    v2 = rng.nextInt(max);
-    checkQueryVideo1 = videoResult[v1].kind.toString().toLowerCase();
-    checkQueryVideo2 = videoResult[v2].kind.toString().toLowerCase();
+//   while (checkQueryVideo1 != "video" || checkQueryVideo2 != "video") {
+//     v1 = rng.nextInt(max);
+//     v2 = rng.nextInt(max);
+//     checkQueryVideo1 = videoResult[v1].kind.toString().toLowerCase();
+//     checkQueryVideo2 = videoResult[v2].kind.toString().toLowerCase();
 
-    strTopYoutubeVideoLink = videoResult[v1].thumbnail.medium.url.toString();
-    strBotYoutubeVideoLink = videoResult[v2].thumbnail.medium.url.toString();
+//     strTopYoutubeVideoLink = videoResult[v1].thumbnail.medium.url.toString();
+//     strBotYoutubeVideoLink = videoResult[v2].thumbnail.medium.url.toString();
 
-    strTopVideoID = videoResult[v1].id;
-    strBotVideoID = videoResult[v2].id;
-    returnStats();
-  }
-}
+//     strTopVideoID = videoResult[v1].id;
+//     strBotVideoID = videoResult[v2].id;
+//     returnStats();
+//   }
+// }
 
 class GameApp extends StatelessWidget {
   const GameApp({Key? key}) : super(key: key);
@@ -124,9 +167,12 @@ class _HomePageWidgetState extends State<HomePageWidget> {
       } else {
         _score = 0;
       }
+      if (strTopYoutubeVideoLikes == "-1") {
+        _showErrorToast(context);
+      }
     });
 
-    getVideos(videoResult);
+    // getVideos(videoResult);
   }
 
   _showErrorToast(BuildContext context) {
@@ -143,7 +189,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
 
   @override
   Widget build(BuildContext context) {
-    // strTopYoutubeVideoLikes="-1";
     return Scaffold(
       key: scaffoldKey,
       body: SingleChildScrollView(
@@ -154,10 +199,11 @@ class _HomePageWidgetState extends State<HomePageWidget> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Videos for: $query',
+                  'Videos for: $channelName',
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25.0),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 25.0),
                 ),
                 Padding(
                   padding: const EdgeInsets.all(12.0),
@@ -174,9 +220,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     ),
                   ),
                 ),
-                (strTopYoutubeVideoLikes == "-1")
-                    ? _showErrorToast(context)
-                    : Text('$strTopYoutubeVideoLikes Likes'),
+                Text('$strTopYoutubeVideoLikes Likes'),
                 const Text(
                   'Which Has More Likes:',
                   textAlign: TextAlign.center,
